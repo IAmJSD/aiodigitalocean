@@ -15,6 +15,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
 
-from .abc import *
-from .exceptions import *
-from .client import Client
+
+class Forbidden(Exception):
+    pass
+
+
+class HTTPException(Exception):
+    pass

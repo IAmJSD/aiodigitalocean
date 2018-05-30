@@ -65,9 +65,15 @@ class Kernel(object):
     __slots__ = ["id", "name", "version"]
 
     def __init__(self, kernel_json):
-        self.id = kernel_json['id']
-        self.name = kernel_json['name']
-        self.version = kernel_json['version']
+        if not kernel_json:
+            self.id = None
+            self.name = None
+            self.version = None
+            return
+
+        self.id = kernel_json.get('id')
+        self.name = kernel_json.get('name')
+        self.version = kernel_json.get('version')
 # A kernel object.
 
 
@@ -143,11 +149,11 @@ class Region(object):
     ]
 
     def __init__(self, region_json):
-        self.name = region_json['name']
-        self.slug = region_json['slug']
-        self.sizes = region_json['sizes']
-        self.features = region_json['features']
-        self.available = region_json['available']
+        self.name = region_json.get('name')
+        self.slug = region_json.get('slug')
+        self.sizes = region_json.get('sizes')
+        self.features = region_json.get('features')
+        self.available = region_json.get('available')
 # A region object.
 
 
