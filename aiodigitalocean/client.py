@@ -16,7 +16,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import aiohttp
-from .exceptions import Forbidden, HTTPException
+import asyncio
+from .exceptions import Forbidden, HTTPException, CannotCreateDroplet
 from .abc import Droplet
 # Imports go here.
 
@@ -24,15 +25,19 @@ from .abc import Droplet
 class _DropletModel:
     def __init__(
         self, client, id=None, name=None,
-        size=None, locked=None,
-        status=None, tags=None
+        size=None, locked=None, region=None,
+        status=None, tags=None, image=None,
+        user_init=None, ssh_keys=None
     ):
+        self.user_init = user_init
+        self.ssh_keys = ssh_keys
         self.client = client
         self.kwargs = {}
         possible_args = [
             [id, "id"], [name, "name"],
             [size, "size"], [locked, "locked"],
-            [status, "status"], [tags, "tags"]
+            [status, "status"], [tags, "tags"],
+            [region, "region"], [image, "image"]
         ]
         for arg in possible_args:
             if arg[0] is not None:
@@ -89,7 +94,17 @@ class _DropletModel:
                     result = True
                 else:
                     for key in self.kwargs:
-                        if self.kwargs[key] == droplet.__getattribute__(key):
+                        if key == "region":
+                            if self.kwargs[key] == droplet.region.slug:
+                                result = True
+                            else:
+                                break
+                        elif key == "image":
+                            if self.kwargs[key] == droplet.image.slug:
+                                result = True
+                            else:
+                                break
+                        elif self.kwargs[key] == droplet.__getattribute__(key):
                             result = True
                         else:
                             break
@@ -149,13 +164,81 @@ class _DropletModel:
                     result = True
                 else:
                     for key in self.kwargs:
-                        if self.kwargs[key] == droplet.__getattribute__(key):
+                        if key == "region":
+                            if self.kwargs[key] == droplet.region.slug:
+                                result = True
+                            else:
+                                break
+                        elif key == "image":
+                            if self.kwargs[key] == droplet.image.slug:
+                                result = True
+                            else:
+                                break
+                        elif self.kwargs[key] == droplet.__getattribute__(key):
                             result = True
                         else:
                             break
                 if result:
                     yield droplet
-    # Tries to get a droplet matching the model. If it can't, it returns None.
+    # Tries to make a generator of droplets matching the model. If it can't, it returns None.
+
+    async def create(self, wait_for=True):
+        if "size" not in self.kwargs:
+            raise CannotCreateDroplet(
+                "Size not found in your model."
+            )
+        elif "name" not in self.kwargs:
+            raise CannotCreateDroplet(
+                "Name not found in your model."
+            )
+        elif "region" not in self.kwargs:
+            raise CannotCreateDroplet(
+                "Region not found in your model."
+            )
+
+        to_send = {
+            "size": self.kwargs['size'],
+            "name": self.kwargs['name'],
+            "region": self.kwargs['region'],
+            "image": self.kwargs['image']
+        }
+
+        if self.ssh_keys:
+            to_send['ssh_keys'] = self.ssh_keys
+
+        if self.user_init:
+            to_send['user_data'] = self.user_init
+
+        response, _json = await self.client.v2_request(
+            "POST", "droplets", to_send
+        )
+
+        if response.status == 403:
+            raise Forbidden(
+                "Credentials invalid."
+            )
+        elif response.status == 404:
+            return
+        elif response.status != 202:
+            raise HTTPException(
+                f"Returned the status {response.status}."
+            )
+
+        if not wait_for:
+            return Droplet(self.client, _json['droplet'])
+
+        _id = _json['droplet']['id']
+
+        while True:
+            await asyncio.sleep(1)
+            response, _json = await self.client.v2_request(
+                "GET", f"droplets/{_id}"
+            )
+            if _json['droplet']['status'] == "active":
+                return Droplet(
+                    self.client, _json['droplet']
+                )
+    # Creates a droplet.
 
 
 class Client:
@@ -194,7 +277,12 @@ class Client:
 
     def DropletModel(
             self, id=None, name=None, size=None, locked=None,
-            status=None, tags=None
+            status=None, tags=None, region=None, image=None,
+            user_init=None, ssh_keys=None
     ):
-        return _DropletModel(self, id, name, size, locked, status, tags)
+        return _DropletModel(
+            self, id, name, size, locked,
+            region, status, tags, image,
+            user_init, ssh_keys
+        )
     # Getting around language limitations.

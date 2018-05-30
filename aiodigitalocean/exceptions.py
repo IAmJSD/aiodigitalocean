@@ -22,3 +22,7 @@ class Forbidden(Exception):
 
 class HTTPException(Exception):
     pass
+
+
+class CannotCreateDroplet(Exception):
+    pass
