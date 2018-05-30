@@ -16,6 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import dateutil.parser
+from .exceptions import Forbidden, HTTPException
 # Imports go here.
 
 
@@ -216,4 +217,20 @@ class Droplet(object):
         )
 
         self.tags = droplet_json['tags']
+
+    async def delete(self):
+        response, _json = self.client.v2_request(
+            "DELETE", f"droplets/{self.id}"
+        )
+        if response.status == 403:
+            raise Forbidden(
+                "Credentials invalid."
+            )
+        elif response.status == 404:
+            return
+        elif response.status != 202:
+            raise HTTPException(
+                f"Returned the status {response.status}."
+            )
+        return True
 # A droplet object.

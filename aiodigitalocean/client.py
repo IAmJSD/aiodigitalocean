@@ -275,7 +275,7 @@ class Client:
                     return response, (await response.json())
     # Runs a API V2 request.
 
-    def DropletModel(
+    def droplet_model(
             self, id=None, name=None, size=None, locked=None,
             status=None, tags=None, region=None, image=None,
             user_init=None, ssh_keys=None
