@@ -255,7 +255,10 @@ class Client:
                         "Authorization": f"Bearer {self.api_key}"
                     }
                 ) as response:
-                    return response, (await response.json())
+                    try:
+                        return response, (await response.json())
+                    except aiohttp.client_exceptions.ContentTypeError:
+                        return response
             elif method == "POST":
                 async with session.post(
                     f"https://api.digitalocean.com/v2/{address}",
@@ -264,7 +267,10 @@ class Client:
                     },
                     data=data
                 ) as response:
-                    return response, (await response.json())
+                    try:
+                        return response, (await response.json())
+                    except aiohttp.client_exceptions.ContentTypeError:
+                        return response
             elif method == "DELETE":
                 async with session.delete(
                     f"https://api.digitalocean.com/v2/{address}",
@@ -272,7 +278,10 @@ class Client:
                         "Authorization": f"Bearer {self.api_key}"
                     }
                 ) as response:
-                    return response, (await response.json())
+                    try:
+                        return response, (await response.json())
+                    except aiohttp.client_exceptions.ContentTypeError:
+                        return response
     # Runs a API V2 request.
 
     def droplet_model(

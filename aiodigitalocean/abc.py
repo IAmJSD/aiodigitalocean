@@ -219,16 +219,19 @@ class Droplet(object):
         self.tags = droplet_json['tags']
 
     async def delete(self):
-        response, _json = self.client.v2_request(
+        cli = self.client
+        response = await cli.v2_request(
             "DELETE", f"droplets/{self.id}"
         )
+        if isinstance(response, tuple):
+            response = response[0]
         if response.status == 403:
             raise Forbidden(
                 "Credentials invalid."
             )
         elif response.status == 404:
             return
-        elif response.status != 202:
+        elif response.status != 204:
             raise HTTPException(
                 f"Returned the status {response.status}."
             )
