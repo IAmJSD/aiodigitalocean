@@ -236,4 +236,13 @@ class Droplet(object):
                 f"Returned the status {response.status}."
             )
         return True
+
+    async def update(self):
+        model = self.client.droplet_model(
+            id=self.id
+        )
+        try:
+            return await model.find_one()
+        except BaseException:
+            return
 # A droplet object.
