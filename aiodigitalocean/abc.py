@@ -245,4 +245,149 @@ class Droplet(object):
             return await model.find_one()
         except BaseException:
             return
+
+    async def enable_backups(self):
+        response, _json = await self.client.v2_request(
+            "POST", f"droplets/{self.id}/actions", {
+                "type": "enable_backups"
+            }
+        )
+        if response.status == 403:
+            raise Forbidden(
+                "Credentials invalid."
+            )
+        elif response.status == 404:
+            return
+        elif response.status != 201:
+            raise HTTPException(
+                f"Returned the status {response.status}."
+            )
+        return True
+
+    async def disable_backups(self):
+        response, _json = await self.client.v2_request(
+            "POST", f"droplets/{self.id}/actions", {
+                "type": "disable_backups"
+            }
+        )
+        if response.status == 403:
+            raise Forbidden(
+                "Credentials invalid."
+            )
+        elif response.status == 404:
+            return
+        elif response.status != 201:
+            raise HTTPException(
+                f"Returned the status {response.status}."
+            )
+        return True
+
+    async def reboot(self):
+        response, _json = await self.client.v2_request(
+            "POST", f"droplets/{self.id}/actions", {
+                "type": "reboot"
+            }
+        )
+        if response.status == 403:
+            raise Forbidden(
+                "Credentials invalid."
+            )
+        elif response.status == 404:
+            return
+        elif response.status != 201:
+            raise HTTPException(
+                f"Returned the status {response.status}."
+            )
+        return True
+
+    async def power_cycle(self):
+        response, _json = await self.client.v2_request(
+            "POST", f"droplets/{self.id}/actions", {
+                "type": "power_cycle"
+            }
+        )
+        if response.status == 403:
+            raise Forbidden(
+                "Credentials invalid."
+            )
+        elif response.status == 404:
+            return
+        elif response.status != 201:
+            raise HTTPException(
+                f"Returned the status {response.status}."
+            )
+        return True
+
+    async def shutdown(self):
+        response, _json = await self.client.v2_request(
+            "POST", f"droplets/{self.id}/actions", {
+                "type": "shutdown"
+            }
+        )
+        if response.status == 403:
+            raise Forbidden(
+                "Credentials invalid."
+            )
+        elif response.status == 404:
+            return
+        elif response.status != 201:
+            raise HTTPException(
+                f"Returned the status {response.status}."
+            )
+        return True
+
+    async def power_off(self):
+        response, _json = await self.client.v2_request(
+            "POST", f"droplets/{self.id}/actions", {
+                "type": "power_off"
+            }
+        )
+        if response.status == 403:
+            raise Forbidden(
+                "Credentials invalid."
+            )
+        elif response.status == 404:
+            return
+        elif response.status != 201:
+            raise HTTPException(
+                f"Returned the status {response.status}."
+            )
+        return True
+
+    async def power_on(self):
+        response, _json = await self.client.v2_request(
+            "POST", f"droplets/{self.id}/actions", {
+                "type": "power_on"
+            }
+        )
+        if response.status == 403:
+            raise Forbidden(
+                "Credentials invalid."
+            )
+        elif response.status == 404:
+            return
+        elif response.status != 201:
+            raise HTTPException(
+                f"Returned the status {response.status}."
+            )
+        return True
+
+    async def restore(self, image_id: int):
+        response, _json = await self.client.v2_request(
+            "POST", f"droplets/{self.id}/actions", {
+                "type": "restore",
+                "image": image_id
+            }
+        )
+        if response.status == 403:
+            raise Forbidden(
+                "Credentials invalid."
+            )
+        elif response.status == 404:
+            return
+        elif response.status != 201:
+            raise HTTPException(
+                f"Returned the status {response.status}."
+            )
+        return True
 # A droplet object.
