@@ -85,13 +85,76 @@ class _DropletModel:
             for d in _json['droplets']:
                 droplet = Droplet(self.client, d)
                 result = False
-                for key in self.kwargs:
-                    if self.kwargs[key] == droplet.__getattribute__(key):
-                        result = True
-                    else:
-                        break
+                if len(self.kwargs) == 0:
+                    result = True
+                else:
+                    for key in self.kwargs:
+                        if self.kwargs[key] == droplet.__getattribute__(key):
+                            result = True
+                        else:
+                            break
                 if result:
                     return droplet
+    # Tries to get a droplet matching the model. If it can't, it returns None.
+
+    async def find_many(self):
+        if "id" in self.kwargs:
+            # We'll get this droplet by ID.
+            response, _json = await self.client.v2_request(
+                "GET", f"droplets/{self.kwargs['id']}"
+            )
+            if response.status == 403:
+                raise Forbidden(
+                    "Credentials invalid."
+                )
+            elif response.status == 404:
+                return
+            elif response.status != 200:
+                raise HTTPException(
+                    f"Returned the status {response.status}."
+                )
+            else:
+                droplet = Droplet(
+                    self.client, _json['droplet']
+                )
+
+                for key in self.kwargs:
+                    if key != "id":
+                        if self.kwargs[key] != droplet.__getattribute__(key):
+                            return
+
+                yield droplet
+                return
+
+        # We'll have to search all droplets.
+        response, _json = await self.client.v2_request(
+            "GET", "droplets"
+        )
+
+        if response.status == 403:
+            raise Forbidden(
+                "Credentials invalid."
+            )
+        elif response.status == 404:
+            return
+        elif response.status != 200:
+            raise HTTPException(
+                f"Returned the status {response.status}."
+            )
+        else:
+            for d in _json['droplets']:
+                droplet = Droplet(self.client, d)
+                result = False
+                if len(self.kwargs) == 0:
+                    result = True
+                else:
+                    for key in self.kwargs:
+                        if self.kwargs[key] == droplet.__getattribute__(key):
+                            result = True
+                        else:
+                            break
+                if result:
+                    yield droplet
     # Tries to get a droplet matching the model. If it can't, it returns None.
 
 
