@@ -414,6 +414,7 @@ class DropletModel:
         for arg in possible_args:
             if arg[0] is not None:
                 self.kwargs[arg[1]] = arg[0]
+    # Initialises the model.
 
     async def find_one(self):
         if "id" in self.kwargs:
