@@ -36,7 +36,10 @@ class Status(abc.ABC):
         pass
 
     class Other(object):
-        pass
+        __slots__ = ["status"]
+
+        def __init__(self, status):
+            self.status = status
 # A class with a bunch of statuses in.
 
 
@@ -189,7 +192,7 @@ class Droplet(abc.ABC):
         elif status == "archive":
             self.status = Status.Archive
         else:
-            self.status = Status.Other
+            self.status = Status.Other(status)
 
         self.kernel = Kernel(
             droplet_json['kernel']
