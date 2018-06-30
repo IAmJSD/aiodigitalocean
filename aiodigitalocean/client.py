@@ -89,4 +89,4 @@ class Client:
             region, status, tags, image,
             user_init, ssh_keys
         )
-    # Getting around language limitations.
+    # Creates a droplet model without having to specify the client.
