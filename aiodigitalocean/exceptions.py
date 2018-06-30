@@ -26,3 +26,7 @@ class HTTPException(Exception):
 
 class CannotCreateDroplet(Exception):
     pass
+
+
+class EnvVariableNotFound(Exception):
+    pass

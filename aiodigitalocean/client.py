@@ -15,13 +15,29 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
 
+import os
 import aiohttp
 from .abc import DropletModel
+from .exceptions import EnvVariableNotFound
 # Imports go here.
 
 
 class Client:
     def __init__(self, api_key):
+        if api_key is None:
+            try:
+                self.api_key = os.environ[
+                    'DIGITALOCEAN_API_KEY'
+                ]
+                return
+            except KeyError:
+                raise EnvVariableNotFound(
+                    "None was specified to the client"
+                    " for the API key. This means that"
+                    " you need the environment variable"
+                    " DIGITALOCEAN_API_KEY."
+                )
+
         self.api_key = api_key
     # Initialises a client.
 
