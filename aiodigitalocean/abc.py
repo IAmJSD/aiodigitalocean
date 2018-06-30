@@ -15,13 +15,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
 
+import abc
 import dateutil.parser
 from .exceptions import Forbidden, HTTPException, CannotCreateDroplet
 import asyncio
 # Imports go here.
 
 
-class Status:
+class Status(abc.ABC):
     class Active(object):
         pass
 
@@ -39,7 +40,7 @@ class Status:
 # A class with a bunch of statuses in.
 
 
-class Type:
+class Type(abc.ABC):
     class Snapshot(object):
         pass
 
@@ -51,7 +52,7 @@ class Type:
 # A class with a bunch of types in.
 
 
-class NetworkType:
+class NetworkType(abc.ABC):
     class Public(object):
         pass
 
@@ -63,7 +64,7 @@ class NetworkType:
 # A class with a bunch of network types in.
 
 
-class Kernel(object):
+class Kernel(abc.ABC):
     __slots__ = ["id", "name", "version"]
 
     def __init__(self, kernel_json):
@@ -79,7 +80,7 @@ class Kernel(object):
 # A kernel object.
 
 
-class Image(object):
+class Image(abc.ABC):
     __slots__ = [
         "id", "name", "distribution", "slug",
         "public", "regions", "created_at", "type",
@@ -109,7 +110,7 @@ class Image(object):
 # A image object.
 
 
-class Network(object):
+class Network(abc.ABC):
     __slots__ = [
         "ip_address", "netmask", "gateway", "type",
         "ipv4"
@@ -131,7 +132,7 @@ class Network(object):
 # A singular network object.
 
 
-class Networks(object):
+class Networks(abc.ABC):
     __slots__ = ["ipv4", "ipv6"]
 
     def __init__(self, networks_json):
@@ -144,7 +145,7 @@ class Networks(object):
 # A networks object.
 
 
-class Region(object):
+class Region(abc.ABC):
     __slots__ = [
         "name", "slug", "sizes",
         "features", "available"
@@ -159,7 +160,7 @@ class Region(object):
 # A region object.
 
 
-class Droplet(object):
+class Droplet(abc.ABC):
     __slots__ = [
         "id", "name", "memory", "vcpus",
         "disk", "locked", "status", "kernel",
@@ -394,7 +395,7 @@ class Droplet(object):
 # A droplet object.
 
 
-class DropletModel:
+class DropletModel(abc.ABC):
     def __init__(
         self, client, id=None, name=None,
         size=None, locked=None, region=None,
