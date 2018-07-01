@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
 import aiohttp
-from .abc import DropletModel
+from .abc import DropletModel, LoadBalancerModel
 from .exceptions import EnvVariableNotFound
 # Imports go here.
 
@@ -90,3 +90,16 @@ class Client:
             user_init, ssh_keys
         )
     # Creates a droplet model without having to specify the client.
+
+    def load_balancer_model(
+            self, id=None, name=None, status=None, ip=None,
+            algorithm=None, region=None, tag=None,
+            redirect_http_to_https=None, droplets=None
+    ):
+        return LoadBalancerModel(
+            self, id, name, status, ip,
+            algorithm, region, tag,
+            redirect_http_to_https,
+            droplets
+        )
+    # Creates a load balancer model without having to specify the client.

@@ -616,3 +616,102 @@ class DropletModel(abc.ABC):
                     self.client, _json['droplet']
                 )
     # Creates a droplet.
+
+
+class LoadBalancer(abc.ABC):
+    pass
+
+
+class LoadBalancerModel(abc.ABC):
+    def __init__(
+        self, client, id=None, name=None, status=None,
+        ip=None, algorithm=None, region=None, tag=None,
+        redirect_http_to_https=None, droplets=None
+    ):
+        self.client = client
+        self.kwargs = {}
+        possible_args = [
+            [id, "id"], [name, "name"],
+            [ip, "ip"], [redirect_http_to_https,
+                         "redirect_http_to_https"],
+            [status, "status"], [tag, "tag"],
+            [region, "region"], [algorithm,
+                                 "algorithm"]
+
+        ]
+        for arg in possible_args:
+            if arg[0] is not None:
+                self.kwargs[arg[1]] = arg[0]
+        if droplets:
+            self.kwargs['droplets'] = []
+            for d in droplets:
+                try:
+                    self.kwargs['droplets'].append(d.id)
+                except AttributeError:
+                    self.kwargs['droplets'].append(d)
+    # Initialises the model.
+
+    async def find_one(self):
+        if "id" in self.kwargs:
+            # We'll get this load balancer by ID.
+            response, _json = await self.client.v2_request(
+                "GET", f"load_balancers/{self.kwargs['id']}"
+            )
+            if response.status == 403:
+                raise Forbidden(
+                    "Credentials invalid."
+                )
+            elif response.status == 404:
+                return
+            elif response.status != 200:
+                raise HTTPException(
+                    f"Returned the status {response.status}."
+                )
+            else:
+                balancer = LoadBalancer(
+                    self.client, _json['load_balancer']
+                )
+
+                for key in self.kwargs:
+                    if key != "id":
+                        if key == "droplets":
+                            if self.kwargs[key] != balancer.__getattribute__(key).id:
+                                return
+                        elif self.kwargs[key] != balancer.__getattribute__(key):
+                            return
+
+                return balancer
+
+        # We'll have to search all load balancers.
+        response, _json = await self.client.v2_request(
+            "GET", "load_balancers"
+        )
+
+        if response.status == 403:
+            raise Forbidden(
+                "Credentials invalid."
+            )
+        elif response.status == 404:
+            return
+        elif response.status != 200:
+            raise HTTPException(
+                f"Returned the status {response.status}."
+            )
+        else:
+            for d in _json['load_balancers']:
+                balancer = LoadBalancer(self.client, d)
+                result = False
+                if len(self.kwargs) == 0:
+                    result = True
+                else:
+                    for key in self.kwargs:
+                        if key == "droplets":
+                            if self.kwargs[key] != balancer.__getattribute__(key).id:
+                                return
+                        elif self.kwargs[key] != balancer.__getattribute__(key):
+                            return
+                        else:
+                            break
+                if result:
+                    return balancer
+    # Tries to get a droplet matching the model. If it can't, it returns None.
