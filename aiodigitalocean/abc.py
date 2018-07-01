@@ -619,7 +619,23 @@ class DropletModel(abc.ABC):
 
 
 class LoadBalancer(abc.ABC):
-    pass
+    __slots__ = [
+        "client", "id", "ip", "algorithm",
+        "status", "created_at", "forwarding_rules",
+        "health_check", "sticky_sessions", "region",
+        "features", "available", "tag", "droplet_ids",
+        "redirect_http_to_https"
+    ]
+
+    def __init__(self, client, balancer_json):
+        self.client = client
+        self.id = balancer_json['id']
+        self.ip = balancer_json['ip']
+        self.algorithm = balancer_json['algorithm']
+        self.status = balancer_json['status']
+        self.created_at = dateutil.parser.parse(
+            balancer_json['created_at']
+        )
 
 
 class LoadBalancerModel(abc.ABC):
@@ -675,7 +691,9 @@ class LoadBalancerModel(abc.ABC):
                 for key in self.kwargs:
                     if key != "id":
                         if key == "droplets":
-                            if self.kwargs[key] != balancer.__getattribute__(key).id:
+                            if self.kwargs[key] != balancer.__getattribute__(
+                                    "droplet_ids"
+                            ):
                                 return
                         elif self.kwargs[key] != balancer.__getattribute__(key):
                             return
@@ -706,7 +724,9 @@ class LoadBalancerModel(abc.ABC):
                 else:
                     for key in self.kwargs:
                         if key == "droplets":
-                            if self.kwargs[key] != balancer.__getattribute__(key).id:
+                            if self.kwargs[key] != balancer.__getattribute__(
+                                "droplet_ids"
+                            ):
                                 return
                         elif self.kwargs[key] != balancer.__getattribute__(key):
                             return
