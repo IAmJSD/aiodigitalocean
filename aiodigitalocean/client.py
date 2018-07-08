@@ -112,7 +112,7 @@ class Client:
         )
         regions = _j['regions']
         for r in regions:
-            if r['slug'].lower() == region_slug:
+            if r.get("slug", "").lower() == region_slug:
                 return Region(r)
     # Gets the region by slug.
 
@@ -123,6 +123,6 @@ class Client:
         )
         images = _j['images']
         for i in images:
-            if i['slug'].lower() == image_slug:
+            if i.get("slug", "").lower() == image_slug:
                 return Image(i)
     # Gets the image by slug.
