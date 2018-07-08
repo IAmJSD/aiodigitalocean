@@ -23,6 +23,14 @@ from .exceptions import EnvVariableNotFound
 # Imports go here.
 
 
+def get_slug(_j):
+    if not _j['slug']:
+        return ""
+
+    return _j['slug'].lower()
+# Gets the slug.
+
+
 class Client:
     def __init__(self, api_key):
         if api_key is None:
@@ -112,17 +120,17 @@ class Client:
         )
         regions = _j['regions']
         for r in regions:
-            if r.get("slug", "").lower() == region_slug:
+            if get_slug(r) == region_slug:
                 return Region(r)
     # Gets the region by slug.
 
     async def get_image(self, image_slug):
         image_slug = image_slug.lower()
         resp, _j = await self.v2_request(
-            "GET", "images"
+            "GET", "images?type=distribution"
         )
         images = _j['images']
         for i in images:
-            if i.get("slug", "").lower() == image_slug:
+            if get_slug(i) == image_slug:
                 return Image(i)
     # Gets the image by slug.
