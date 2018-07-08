@@ -223,6 +223,9 @@ class Droplet(abc.ABC):
 
         self.tags = droplet_json['tags']
 
+    async def add_to_load_balancer(self, load_balancer):
+        load_balancer.add_droplets(self)
+
     async def delete(self):
         cli = self.client
         response = await cli.v2_request(
@@ -713,6 +716,28 @@ class LoadBalancer(abc.ABC):
             return await model.find_one()
         except BaseException:
             return
+
+    async def add_droplets(self, *droplets):
+        d_ids = [
+            d.id for d in droplets
+        ]
+        response = await self.client.v2_request(
+            "POST", "load_balancers/load_balancers/"
+            f"{self.id}/droplets",
+            {
+                "droplet_ids": d_ids
+            }
+        )
+        if response.status == 403:
+            raise Forbidden(
+                "Credentials invalid."
+            )
+        elif response.status == 404:
+            return
+        elif response.status != 204:
+            raise HTTPException(
+                f"Returned the status {response.status}."
+            )
 
 
 class LoadBalancerModel(abc.ABC):
