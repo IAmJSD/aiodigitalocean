@@ -640,6 +640,7 @@ class ForwardingRule(abc.ABC):
         ]
         self.json = rule_json
 
+
 class HealthCheck(abc.ABC):
     __slots__ = [
         "protocol", "port", "path",
