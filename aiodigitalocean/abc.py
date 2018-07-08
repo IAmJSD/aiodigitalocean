@@ -952,6 +952,7 @@ class AccountStatus(abc.ABC):
             self.status = Status.Locked
 
         self.message = message
+# A class for a DigitalOcean account status.
 
 
 class User(abc.ABC):
@@ -977,3 +978,4 @@ class User(abc.ABC):
             user_json['status'],
             user_json['status_message']
         )
+# A class for a DigitalOcean user.
