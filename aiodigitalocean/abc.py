@@ -775,7 +775,8 @@ class LoadBalancerModel(abc.ABC):
     def __init__(
         self, client, id=None, name=None, status=None,
         ip=None, algorithm=None, region=None, tag=None,
-        redirect_http_to_https=None, droplets=None
+        redirect_http_to_https=None, droplets=None,
+        forwarding_rules=None
     ):
         self.client = client
         self.kwargs = {}
@@ -785,8 +786,8 @@ class LoadBalancerModel(abc.ABC):
                          "redirect_http_to_https"],
             [status, "status"], [tag, "tag"],
             [region, "region"], [algorithm,
-                                 "algorithm"]
-
+                                 "algorithm"],
+            [forwarding_rules, "forwarding_rules"]
         ]
         for arg in possible_args:
             if arg[0] is not None:
@@ -823,7 +824,10 @@ class LoadBalancerModel(abc.ABC):
 
                 for key in self.kwargs:
                     if key != "id":
-                        if self.kwargs[key] != balancer.__getattribute__(key):
+                        if key == "forwarding_rules":
+                            if self.kwargs[key] not in balancer.__getattribute__(key):
+                                return
+                        elif self.kwargs[key] != balancer.__getattribute__(key):
                             return
 
                 return balancer
@@ -851,7 +855,10 @@ class LoadBalancerModel(abc.ABC):
                     result = True
                 else:
                     for key in self.kwargs:
-                        if self.kwargs[key] != balancer.__getattribute__(key):
+                        if key == "forwarding_rules":
+                            if self.kwargs[key] not in balancer.__getattribute__(key):
+                                return
+                        elif self.kwargs[key] != balancer.__getattribute__(key):
                             return
                         else:
                             break
@@ -882,7 +889,10 @@ class LoadBalancerModel(abc.ABC):
 
                 for key in self.kwargs:
                     if key != "id":
-                        if self.kwargs[key] != balancer.__getattribute__(key):
+                        if key == "forwarding_rules":
+                            if self.kwargs[key] not in balancer.__getattribute__(key):
+                                return
+                        elif self.kwargs[key] != balancer.__getattribute__(key):
                             return
 
                 yield balancer
@@ -911,7 +921,10 @@ class LoadBalancerModel(abc.ABC):
                     result = True
                 else:
                     for key in self.kwargs:
-                        if self.kwargs[key] == balancer.__getattribute__(key):
+                        if key == "forwarding_rules":
+                            if self.kwargs[key] not in balancer.__getattribute__(key):
+                                break
+                        elif self.kwargs[key] == balancer.__getattribute__(key):
                             result = True
                         else:
                             break
