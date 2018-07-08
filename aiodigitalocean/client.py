@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import aiohttp
 from .abc import DropletModel, LoadBalancerModel,\
-    Region, Image, User, ForwardingRule
+    Region, Image, User, ForwardingRule, SSHKey
 from .exceptions import EnvVariableNotFound, Forbidden,\
     HTTPException
 # Imports go here.
@@ -78,6 +78,17 @@ class Client:
                         return response
             elif method == "DELETE":
                 async with session.delete(
+                    f"https://api.digitalocean.com/v2/{address}",
+                    headers={
+                        "Authorization": f"Bearer {self.api_key}"
+                    }
+                ) as response:
+                    try:
+                        return response, (await response.json())
+                    except aiohttp.client_exceptions.ContentTypeError:
+                        return response
+            elif method == "PUT":
+                async with session.put(
                     f"https://api.digitalocean.com/v2/{address}",
                     headers={
                         "Authorization": f"Bearer {self.api_key}"
@@ -176,3 +187,38 @@ class Client:
 
         return ForwardingRule(_j)
     # Creates a forwarding rule.
+
+    async def get_ssh_key(self, key_name):
+        response, _j = await self.v2_request(
+            "GET", "keys"
+        )
+        if response.status == 403:
+            raise Forbidden(
+                "Credentials invalid."
+            )
+        elif response.status != 200:
+            raise HTTPException(
+                f"Returned the status {response.status}."
+            )
+        else:
+            for key in _j['ssh_keys']:
+                if key['name'] == key_name:
+                    return SSHKey(self, key)
+    # Gets a SSH key by name.
+
+    async def ssh_keys(self):
+        response, _j = await self.v2_request(
+            "GET", "keys"
+        )
+        if response.status == 403:
+            raise Forbidden(
+                "Credentials invalid."
+            )
+        elif response.status != 200:
+            raise HTTPException(
+                f"Returned the status {response.status}."
+            )
+        else:
+            for key in _j['ssh_keys']:
+                yield SSHKey(self, key)
+    # Gets all of the SSH keys.

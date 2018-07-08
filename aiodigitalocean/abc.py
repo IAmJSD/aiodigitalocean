@@ -998,7 +998,7 @@ class LoadBalancerModel(abc.ABC):
                 self.kwargs['droplet_ids']
 
         response, _j = await self.client.v2_request(
-            "GET", "load_balancers",
+            "POST", "load_balancers",
             to_send
         )
 
@@ -1058,3 +1058,60 @@ class User(abc.ABC):
             user_json['status_message']
         )
 # A class for a DigitalOcean user.
+
+
+class SSHKey(abc.ABC):
+    __slots__ = [
+        "id", "fingerprint", "public_key",
+        "name", "client"
+    ]
+
+    def __init__(self, client, key_json):
+        self.client = client
+        self.id = key_json['id']
+        self.fingerprint = key_json[
+            'fingerprint'
+        ]
+        self.public_key = key_json[
+            'public_key'
+        ]
+        self.name = key_json['name']
+
+    async def update(self):
+        async for key in self.client.ssh_keys():
+            if key.id == self.id:
+                return key
+
+    async def edit_name(self, name):
+        response, _j = await self.client.v2_request(
+            "PUT", f"account/keys/{self.id}",
+            {
+                "name": name
+            }
+        )
+        if response.status == 403:
+            raise Forbidden(
+                "Credentials invalid."
+            )
+        elif response.status != 200:
+            raise HTTPException(
+                f"Returned the status {response.status}."
+            )
+        else:
+            return True
+
+    async def delete(self):
+        response = await self.client.v2_request(
+            "DELETE", f"account/keys/{self.id}"
+        )
+        if response.status == 403:
+            raise Forbidden(
+                "Credentials invalid."
+            )
+        elif response.status != 204:
+            raise HTTPException(
+                f"Returned the status {response.status}."
+            )
+        else:
+            return True
+# A class for a SSH key.
