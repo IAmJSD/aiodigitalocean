@@ -739,6 +739,25 @@ class LoadBalancer(abc.ABC):
                 f"Returned the status {response.status}."
             )
 
+    async def delete(self):
+        cli = self.client
+        response = await cli.v2_request(
+            "DELETE", f"load_balancers/{self.id}"
+        )
+        if isinstance(response, tuple):
+            response = response[0]
+        if response.status == 403:
+            raise Forbidden(
+                "Credentials invalid."
+            )
+        elif response.status == 404:
+            return
+        elif response.status != 204:
+            raise HTTPException(
+                f"Returned the status {response.status}."
+            )
+        return True
+
 
 class LoadBalancerModel(abc.ABC):
     def __init__(
