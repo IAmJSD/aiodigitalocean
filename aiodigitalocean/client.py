@@ -17,7 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
 import aiohttp
-from .abc import DropletModel, LoadBalancerModel
+from .abc import DropletModel, LoadBalancerModel,\
+    Region, Image
 from .exceptions import EnvVariableNotFound
 # Imports go here.
 
@@ -103,3 +104,23 @@ class Client:
             droplets
         )
     # Creates a load balancer model without having to specify the client.
+
+    async def get_region(self, region_slug):
+        resp, _j = await self.v2_request(
+            "GET", "regions"
+        )
+        regions = _j['regions']
+        for r in regions:
+            if r['slug'] == region_slug:
+                return Region(r)
+    # Gets the region by slug.
+
+    async def get_image(self, image_slug):
+        resp, _j = await self.v2_request(
+            "GET", "images"
+        )
+        images = _j['images']
+        for i in images:
+            if i['slug'] == image_slug:
+                return Image(i)
+    # Gets the image by slug.
