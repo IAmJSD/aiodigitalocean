@@ -224,7 +224,7 @@ class Droplet(abc.ABC):
         self.tags = droplet_json['tags']
 
     async def add_to_load_balancer(self, load_balancer):
-        load_balancer.add_droplets(self)
+        await load_balancer.add_droplets(self)
 
     async def delete(self):
         cli = self.client
