@@ -18,8 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import aiohttp
 from .abc import DropletModel, LoadBalancerModel,\
-    Region, Image
-from .exceptions import EnvVariableNotFound
+    Region, Image, User
+from .exceptions import EnvVariableNotFound, Forbidden,\
+    HTTPException
 # Imports go here.
 
 
@@ -134,3 +135,19 @@ class Client:
             if get_slug(i) == image_slug:
                 return Image(i)
     # Gets the image by slug.
+
+    async def get_user(self):
+        response, _j = await self.v2_request(
+            "GET", "account"
+        )
+        if response.status == 403:
+            raise Forbidden(
+                "Credentials invalid."
+            )
+        elif response.status != 200:
+            raise HTTPException(
+                f"Returned the status {response.status}."
+            )
+        else:
+            return User(_j['account'])
+    # Gets the DigitalOcean user for the person signed in.

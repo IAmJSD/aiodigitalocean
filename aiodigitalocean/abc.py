@@ -35,6 +35,12 @@ class Status(abc.ABC):
     class Archive(object):
         pass
 
+    class Warning(object):
+        pass
+
+    class Locked(object):
+        pass
+
     class Other(object):
         __slots__ = ["status"]
 
@@ -906,3 +912,46 @@ class LoadBalancerModel(abc.ABC):
                 if result:
                     yield balancer
     # Tries to make a generator of droplets matching the load balancers. If it can't, it returns None.
+
+
+class AccountStatus(abc.ABC):
+    __slots__ = [
+        "status", "message"
+    ]
+
+    def __init__(
+        self, status, message
+    ):
+        if status == "active":
+            self.status = Status.Active
+        elif status == "warning":
+            self.status = Status.Warning
+        elif status == "locked":
+            self.status = Status.Locked
+
+        self.message = message
+
+
+class User(abc.ABC):
+    __slots__ = [
+        "droplet_limit", "floating_ip_limit",
+        "email", "uuid", "email_verified",
+        "status"
+    ]
+
+    def __init__(self, user_json):
+        self.droplet_limit = user_json[
+            'droplet_limit'
+        ]
+        self.floating_ip_limit = user_json[
+            'floating_ip_limit'
+        ]
+        self.email = user_json['email']
+        self.uuid = user_json['uuid']
+        self.email_verified = user_json[
+            'email_verified'
+        ]
+        self.status = AccountStatus(
+            user_json['status'],
+            user_json['status_message']
+        )
