@@ -222,3 +222,23 @@ class Client:
             for key in _j['ssh_keys']:
                 yield SSHKey(self, key)
     # Gets all of the SSH keys.
+
+    async def create_ssh_key(self, name, public_key):
+        _j = {
+            "name": name,
+            "public_key": public_key
+        }
+        response, json = await self.v2_request(
+            "POST", "account/keys", _j
+        )
+        if response.status == 403:
+            raise Forbidden(
+                "Credentials invalid."
+            )
+        elif response.status != 201:
+            raise HTTPException(
+                f"Returned the status {response.status}."
+            )
+        else:
+            return SSHKey(self, json['ssh_key'])
+    # Creates a SSH key.
