@@ -513,7 +513,8 @@ class DropletModel(abc.ABC):
                 for key in self.kwargs:
                     if key != "id":
                         if key == "tags":
-                            if self.kwargs[key] not in droplet.__getattribute__(key):
+                            if self.kwargs[key] not in\
+                                    droplet.__getattribute__(key):
                                 return
                         elif self.kwargs[key] != droplet.__getattribute__(key):
                             return
@@ -545,7 +546,8 @@ class DropletModel(abc.ABC):
                 else:
                     for key in self.kwargs:
                         if key == "tags":
-                            if self.kwargs[key] not in droplet.__getattribute__(key):
+                            if self.kwargs[key] not in\
+                                    droplet.__getattribute__(key):
                                 break
                         elif self.kwargs[key] == droplet.__getattribute__(key):
                             result = True
@@ -553,7 +555,8 @@ class DropletModel(abc.ABC):
                             break
                 if result:
                     yield droplet
-    # Tries to make a generator of droplets matching the model. If it can't, it returns None.
+    # Tries to make a generator of droplets matching the model.
+    # If it can't, it returns None.
 
     async def create(self, wait_for=True):
         if "size" not in self.kwargs:
@@ -851,9 +854,11 @@ class LoadBalancerModel(abc.ABC):
                 for key in self.kwargs:
                     if key != "id":
                         if key == "forwarding_rules":
-                            if self.kwargs[key] not in balancer.__getattribute__(key):
+                            if self.kwargs[key] not in\
+                                    balancer.__getattribute__(key):
                                 return
-                        elif self.kwargs[key] != balancer.__getattribute__(key):
+                        elif self.kwargs[key] !=\
+                                balancer.__getattribute__(key):
                             return
 
                 return balancer
@@ -882,9 +887,11 @@ class LoadBalancerModel(abc.ABC):
                 else:
                     for key in self.kwargs:
                         if key == "forwarding_rules":
-                            if self.kwargs[key] not in balancer.__getattribute__(key):
+                            if self.kwargs[key] not in\
+                                    balancer.__getattribute__(key):
                                 return
-                        elif self.kwargs[key] != balancer.__getattribute__(key):
+                        elif self.kwargs[key] !=\
+                                balancer.__getattribute__(key):
                             return
                         else:
                             break
@@ -916,9 +923,11 @@ class LoadBalancerModel(abc.ABC):
                 for key in self.kwargs:
                     if key != "id":
                         if key == "forwarding_rules":
-                            if self.kwargs[key] not in balancer.__getattribute__(key):
+                            if self.kwargs[key] not in\
+                                    balancer.__getattribute__(key):
                                 return
-                        elif self.kwargs[key] != balancer.__getattribute__(key):
+                        elif self.kwargs[key] !=\
+                                balancer.__getattribute__(key):
                             return
 
                 yield balancer
@@ -948,15 +957,18 @@ class LoadBalancerModel(abc.ABC):
                 else:
                     for key in self.kwargs:
                         if key == "forwarding_rules":
-                            if self.kwargs[key] not in balancer.__getattribute__(key):
+                            if self.kwargs[key] not in\
+                                    balancer.__getattribute__(key):
                                 break
-                        elif self.kwargs[key] == balancer.__getattribute__(key):
+                        elif self.kwargs[key] ==\
+                                balancer.__getattribute__(key):
                             result = True
                         else:
                             break
                 if result:
                     yield balancer
-    # Tries to make a generator of droplets matching the load balancers. If it can't, it returns None.
+    # Tries to make a generator of droplets matching the load balancers.
+    # If it can't, it returns None.
 
     async def create(self):
         if "name" not in self.kwargs:
@@ -976,8 +988,9 @@ class LoadBalancerModel(abc.ABC):
         to_send = {
             "name": self.kwargs['name'],
             "region": self.kwargs['region'].slug,
-            "forwarding_rules": [f.json for f in
-                self.kwargs['forwarding_rules']]
+            "forwarding_rules": [
+                f.json for f in self.kwargs[
+                    'forwarding_rules']]
         }
 
         if "droplet_ids" in self.kwargs:
