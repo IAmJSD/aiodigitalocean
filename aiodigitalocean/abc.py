@@ -17,7 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import abc
 import dateutil.parser
-from .exceptions import Forbidden, HTTPException, CannotCreateDroplet
+from .exceptions import Forbidden, HTTPException, CannotCreateDroplet,\
+    CannotCreateLoadBalancer
 import asyncio
 # Imports go here.
 
@@ -571,7 +572,7 @@ class DropletModel(abc.ABC):
         to_send = {
             "size": self.kwargs['size'],
             "name": self.kwargs['name'],
-            "region": self.kwargs['region'],
+            "region": self.kwargs['region'].slug,
             "image": self.kwargs['image']
         }
 
@@ -933,7 +934,48 @@ class LoadBalancerModel(abc.ABC):
     # Tries to make a generator of droplets matching the load balancers. If it can't, it returns None.
 
     async def create(self):
-        pass
+        if "name" not in self.kwargs:
+            raise CannotCreateLoadBalancer(
+                "Name not found in your model."
+            )
+        elif "region" not in self.kwargs:
+            raise CannotCreateLoadBalancer(
+                "Region not found in your model."
+            )
+        elif "forwarding_rules" not in self.kwargs:
+            raise CannotCreateLoadBalancer(
+                "Forwarding rules not found "
+                "in your model."
+            )
+
+        to_send = {
+            "name": self.kwargs['name'],
+            "region": self.kwargs['region'].slug,
+            "forwarding_rules": self.kwargs[
+                'forwarding_rules'
+            ]
+        }
+
+        if "droplet_ids" in self.kwargs:
+            to_send['droplet_ids'] =\
+                self.kwargs['droplet_ids']
+
+        response, _j = await self.client.v2_request(
+            "GET", "load_balancers",
+            to_send
+        )
+
+        if response.status == 403:
+            raise Forbidden(
+                "Credentials invalid."
+            )
+        elif response.status != 200:
+            raise HTTPException(
+                f"Returned the status {response.status}."
+            )
+        else:
+            return LoadBalancer(self.client, _j)
+    # Creates a load balancer.
 
 
 class AccountStatus(abc.ABC):

@@ -30,3 +30,6 @@ class CannotCreateDroplet(Exception):
 
 class EnvVariableNotFound(Exception):
     pass
+
+class CannotCreateLoadBalancer(Exception):
+    pass
