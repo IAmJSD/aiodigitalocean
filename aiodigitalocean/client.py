@@ -106,21 +106,23 @@ class Client:
     # Creates a load balancer model without having to specify the client.
 
     async def get_region(self, region_slug):
+        region_slug = region_slug.lower()
         resp, _j = await self.v2_request(
             "GET", "regions"
         )
         regions = _j['regions']
         for r in regions:
-            if r['slug'] == region_slug:
+            if r['slug'].lower() == region_slug:
                 return Region(r)
     # Gets the region by slug.
 
     async def get_image(self, image_slug):
+        image_slug = image_slug.lower()
         resp, _j = await self.v2_request(
             "GET", "images"
         )
         images = _j['images']
         for i in images:
-            if i['slug'] == image_slug:
+            if i['slug'].lower() == image_slug:
                 return Image(i)
     # Gets the image by slug.
