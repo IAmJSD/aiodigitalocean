@@ -638,7 +638,7 @@ class ForwardingRule(abc.ABC):
         self.tls_passthrough = rule_json[
             'tls_passthrough'
         ]
-
+        self.json = rule_json
 
 class HealthCheck(abc.ABC):
     __slots__ = [
@@ -730,7 +730,9 @@ class LoadBalancer(abc.ABC):
         except BaseException:
             return
 
-    async def add_droplets(self, *droplets):
+    async def add_droplets(
+        self, *droplets: Droplet
+    ):
         d_ids = [
             d.id for d in droplets
         ]
@@ -770,6 +772,28 @@ class LoadBalancer(abc.ABC):
                 f"Returned the status {response.status}."
             )
         return True
+
+    async def add_forwarding_rules(
+        self, *rules: ForwardingRule
+    ):
+        _j = {
+            "forwarding_rules": [
+                f.json for f in rules
+            ]
+        }
+        response = self.client.v2_request(
+            "POST", f"load_balancers/{self.id}"
+            "/forwarding_rules", _j
+        )
+        if response.status == 403:
+            raise Forbidden(
+                "Credentials invalid."
+            )
+        elif response.status != 204:
+            raise HTTPException(
+                f"Returned the status {response.status}."
+            )
+    # Adds a set of forwarding rules.
 
 
 class LoadBalancerModel(abc.ABC):
@@ -951,9 +975,8 @@ class LoadBalancerModel(abc.ABC):
         to_send = {
             "name": self.kwargs['name'],
             "region": self.kwargs['region'].slug,
-            "forwarding_rules": self.kwargs[
-                'forwarding_rules'
-            ]
+            "forwarding_rules": [f.json for f in
+                self.kwargs['forwarding_rules']]
         }
 
         if "droplet_ids" in self.kwargs:
