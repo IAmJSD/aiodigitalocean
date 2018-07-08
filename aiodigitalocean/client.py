@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import aiohttp
 from .abc import DropletModel, LoadBalancerModel,\
-    Region, Image, User
+    Region, Image, User, ForwardingRule
 from .exceptions import EnvVariableNotFound, Forbidden,\
     HTTPException
 # Imports go here.
@@ -151,3 +151,28 @@ class Client:
         else:
             return User(_j['account'])
     # Gets the DigitalOcean user for the person signed in.
+
+    @staticmethod
+    def create_forwarding_rule(
+        entry_protocol, entry_port,
+        target_protocol, target_port,
+        certificate_id=None, tls_passthrough=None
+    ):
+        _j = {
+            "entry_protocol": entry_protocol,
+            "entry_port": entry_port,
+            "target_protocol": target_protocol,
+            "target_port": target_port
+        }
+        if certificate_id:
+            _j['certificate_id'] = certificate_id
+        else:
+            _j['certificate_id'] = ""
+
+        if tls_passthrough:
+            _j['tls_passthrough'] = tls_passthrough
+        else:
+            _j['tls_passthrough'] = False
+
+        return ForwardingRule(_j)
+    # Creates a forwarding rule.
