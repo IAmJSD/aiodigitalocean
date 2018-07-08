@@ -471,17 +471,7 @@ class DropletModel(abc.ABC):
                     result = True
                 else:
                     for key in self.kwargs:
-                        if key == "region":
-                            if self.kwargs[key] == droplet.region.slug:
-                                result = True
-                            else:
-                                break
-                        elif key == "image":
-                            if self.kwargs[key] == droplet.image.slug:
-                                result = True
-                            else:
-                                break
-                        elif self.kwargs[key] == droplet.__getattribute__(key):
+                        if self.kwargs[key] == droplet.__getattribute__(key):
                             result = True
                         else:
                             break
@@ -541,17 +531,7 @@ class DropletModel(abc.ABC):
                     result = True
                 else:
                     for key in self.kwargs:
-                        if key == "region":
-                            if self.kwargs[key] == droplet.region.slug:
-                                result = True
-                            else:
-                                break
-                        elif key == "image":
-                            if self.kwargs[key] == droplet.image.slug:
-                                result = True
-                            else:
-                                break
-                        elif self.kwargs[key] == droplet.__getattribute__(key):
+                        if self.kwargs[key] == droplet.__getattribute__(key):
                             result = True
                         else:
                             break
@@ -618,6 +598,75 @@ class DropletModel(abc.ABC):
     # Creates a droplet.
 
 
+class ForwardingRule(abc.ABC):
+    __slots__ = [
+        "entry_protocol", "entry_port",
+        "target_protocol", "target_protocol",
+        "certificate_id", "tls_passthrough"
+    ]
+
+    def __init__(self, rule_json):
+        self.entry_protocol = rule_json[
+            'entry_protocol'
+        ]
+        self.entry_port = rule_json[
+            'entry_port'
+        ]
+        self.target_protocol = rule_json[
+            'target_protocol'
+        ]
+        self.certificate_id = rule_json[
+            'certificate_id'
+        ] if rule_json['certificate_id']\
+            != "" else None
+        self.tls_passthrough = rule_json[
+            'tls_passthrough'
+        ]
+
+
+class HealthCheck(abc.ABC):
+    __slots__ = [
+        "protocol", "port", "path",
+        "check_interval_seconds",
+        "response_timeout_seconds",
+        "unhealthy_threshold",
+        "healthy_threshold"
+    ]
+
+    def __init__(self, health_json):
+        self.protocol = health_json[
+            'protocol'
+        ]
+        self.port = health_json['port']
+        self.path = health_json['path']
+        self.check_interval_seconds =\
+            health_json['check_interval_seconds']
+        self.response_timeout_seconds =\
+            health_json['response_timeout_seconds']
+        self.unhealthy_threshold = health_json[
+            'unhealthy_threshold'
+        ]
+        self.healthy_threshold = health_json[
+            'healthy_threshold'
+        ]
+
+
+class StickySessions(abc.ABC):
+    __slots__ = [
+        "type", "cookie_name",
+        "cookie_ttl_seconds"
+    ]
+
+    def __init__(self, session_json):
+        self.type = session_json['type']
+        self.cookie_name = session_json.get(
+            "cookie_name"
+        )
+        self.cookie_ttl_seconds = session_json.get(
+            "cookie_ttl_seconds"
+        )
+
+
 class LoadBalancer(abc.ABC):
     __slots__ = [
         "client", "id", "ip", "algorithm",
@@ -636,6 +685,34 @@ class LoadBalancer(abc.ABC):
         self.created_at = dateutil.parser.parse(
             balancer_json['created_at']
         )
+        self.forwarding_rules = [
+            ForwardingRule(r) for r in
+            balancer_json['forwarding_rules']
+        ]
+        self.health_check = HealthCheck(
+            balancer_json['health_check']
+        )
+        self.sticky_sessions = StickySessions(
+            balancer_json['sticky_sessions']
+        )
+        self.region = Region(
+            balancer_json['region']
+        )
+        self.tag = balancer_json['tag'] if balancer_json['tag']\
+            != "" else None
+        self.droplet_ids = balancer_json['droplet_ids']
+        self.redirect_http_to_https = balancer_json[
+            'redirect_http_to_https'
+        ]
+
+    async def update(self):
+        model = self.client.load_balancer_model(
+            id=self.id
+        )
+        try:
+            return await model.find_one()
+        except BaseException:
+            return
 
 
 class LoadBalancerModel(abc.ABC):
@@ -662,9 +739,9 @@ class LoadBalancerModel(abc.ABC):
             self.kwargs['droplets'] = []
             for d in droplets:
                 try:
-                    self.kwargs['droplets'].append(d.id)
+                    self.kwargs['droplet_ids'].append(d.id)
                 except AttributeError:
-                    self.kwargs['droplets'].append(d)
+                    self.kwargs['droplet_ids'].append(d)
     # Initialises the model.
 
     async def find_one(self):
@@ -690,12 +767,7 @@ class LoadBalancerModel(abc.ABC):
 
                 for key in self.kwargs:
                     if key != "id":
-                        if key == "droplets":
-                            if self.kwargs[key] != balancer.__getattribute__(
-                                    "droplet_ids"
-                            ):
-                                return
-                        elif self.kwargs[key] != balancer.__getattribute__(key):
+                        if self.kwargs[key] != balancer.__getattribute__(key):
                             return
 
                 return balancer
@@ -723,15 +795,70 @@ class LoadBalancerModel(abc.ABC):
                     result = True
                 else:
                     for key in self.kwargs:
-                        if key == "droplets":
-                            if self.kwargs[key] != balancer.__getattribute__(
-                                "droplet_ids"
-                            ):
-                                return
-                        elif self.kwargs[key] != balancer.__getattribute__(key):
+                        if self.kwargs[key] != balancer.__getattribute__(key):
                             return
                         else:
                             break
                 if result:
                     return balancer
     # Tries to get a droplet matching the model. If it can't, it returns None.
+
+    async def find_many(self):
+        if "id" in self.kwargs:
+            # We'll get this droplet by ID.
+            response, _json = await self.client.v2_request(
+                "GET", f"load_balancers/{self.kwargs['id']}"
+            )
+            if response.status == 403:
+                raise Forbidden(
+                    "Credentials invalid."
+                )
+            elif response.status == 404:
+                return
+            elif response.status != 200:
+                raise HTTPException(
+                    f"Returned the status {response.status}."
+                )
+            else:
+                balancer = LoadBalancer(
+                    self.client, _json['load_balancer']
+                )
+
+                for key in self.kwargs:
+                    if key != "id":
+                        if self.kwargs[key] != balancer.__getattribute__(key):
+                            return
+
+                yield balancer
+                return
+
+        # We'll have to search all load balancers.
+        response, _json = await self.client.v2_request(
+            "GET", "load_balancers"
+        )
+
+        if response.status == 403:
+            raise Forbidden(
+                "Credentials invalid."
+            )
+        elif response.status == 404:
+            return
+        elif response.status != 200:
+            raise HTTPException(
+                f"Returned the status {response.status}."
+            )
+        else:
+            for b in _json['load_balancers']:
+                balancer = LoadBalancer(self.client, b)
+                result = False
+                if len(self.kwargs) == 0:
+                    result = True
+                else:
+                    for key in self.kwargs:
+                        if self.kwargs[key] == balancer.__getattribute__(key):
+                            result = True
+                        else:
+                            break
+                if result:
+                    yield balancer
+    # Tries to make a generator of droplets matching the load balancers. If it can't, it returns None.
