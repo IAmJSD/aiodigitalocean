@@ -576,7 +576,7 @@ class DropletModel(abc.ABC):
             "size": self.kwargs['size'],
             "name": self.kwargs['name'],
             "region": self.kwargs['region'].slug,
-            "image": self.kwargs['image']
+            "image": self.kwargs['image'].slug
         }
 
         if self.ssh_keys:
