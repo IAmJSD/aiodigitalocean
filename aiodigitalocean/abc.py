@@ -511,7 +511,10 @@ class DropletModel(abc.ABC):
 
                 for key in self.kwargs:
                     if key != "id":
-                        if self.kwargs[key] != droplet.__getattribute__(key):
+                        if key == "tags":
+                            if self.kwargs[key] not in droplet.__getattribute__(key):
+                                return
+                        elif self.kwargs[key] != droplet.__getattribute__(key):
                             return
 
                 yield droplet
@@ -540,7 +543,10 @@ class DropletModel(abc.ABC):
                     result = True
                 else:
                     for key in self.kwargs:
-                        if self.kwargs[key] == droplet.__getattribute__(key):
+                        if key == "tags":
+                            if self.kwargs[key] not in droplet.__getattribute__(key):
+                                break
+                        elif self.kwargs[key] == droplet.__getattribute__(key):
                             result = True
                         else:
                             break
@@ -912,6 +918,9 @@ class LoadBalancerModel(abc.ABC):
                 if result:
                     yield balancer
     # Tries to make a generator of droplets matching the load balancers. If it can't, it returns None.
+
+    async def create(self):
+        pass
 
 
 class AccountStatus(abc.ABC):
