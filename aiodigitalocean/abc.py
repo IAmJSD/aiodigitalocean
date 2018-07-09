@@ -799,6 +799,16 @@ class LoadBalancer(abc.ABC):
             )
     # Adds a set of forwarding rules.
 
+    async def get_droplets(self):
+        for d in self.droplet_ids:
+            m = self.client.droplet_model(
+                id=d
+            )
+            r = await m.find_one()
+            if r:
+                yield r
+    # Gets all of the droplets associated to this load balancer.
+
 
 class LoadBalancerModel(abc.ABC):
     def __init__(
