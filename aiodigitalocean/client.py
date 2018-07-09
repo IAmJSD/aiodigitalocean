@@ -190,7 +190,7 @@ class Client:
 
     async def get_ssh_key(self, key_name):
         response, _j = await self.v2_request(
-            "GET", "keys"
+            "GET", "account/keys"
         )
         if response.status == 403:
             raise Forbidden(
@@ -208,7 +208,7 @@ class Client:
 
     async def ssh_keys(self):
         response, _j = await self.v2_request(
-            "GET", "keys"
+            "GET", "account/keys"
         )
         if response.status == 403:
             raise Forbidden(
