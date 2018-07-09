@@ -242,3 +242,21 @@ class Client:
         else:
             return SSHKey(self, json['ssh_key'])
     # Creates a SSH key.
+
+    async def images(self):
+        resp, _j = await self.v2_request(
+            "GET", "images?type=distribution"
+        )
+        images = _j['images']
+        for i in images:
+            yield Image(i)
+    # Gets all of the images.
+
+    async def regions(self):
+        resp, _j = await self.v2_request(
+            "GET", "regions"
+        )
+        regions = _j['regions']
+        for r in regions:
+            yield Region(r)
+    # Gets all of the regions.
