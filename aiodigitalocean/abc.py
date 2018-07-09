@@ -176,7 +176,7 @@ class Droplet(abc.ABC):
         "disk", "locked", "status", "kernel",
         "created_at", "features", "backup_ids",
         "snapshot_ids", "image", "volume_ids",
-        "size", "networks", "region", "tags",
+        "size_slug", "networks", "region", "tags",
         "client"
     ]
 
@@ -218,7 +218,7 @@ class Droplet(abc.ABC):
         )
 
         self.volume_ids = droplet_json['volume_ids']
-        self.size = droplet_json['size_slug']
+        self.size_slug = droplet_json['size_slug']
 
         self.networks = Networks(
             droplet_json['networks']
@@ -453,7 +453,15 @@ class DropletModel(abc.ABC):
 
                 for key in self.kwargs:
                     if key != "id":
-                        if self.kwargs[key] != droplet.__getattribute__(key):
+                        if key == "size":
+                            if self.kwargs[key].slug !=\
+                                    droplet.__getattribute__("size_slug"):
+                                return
+                        elif key == "tags":
+                            if self.kwargs[key] not in\
+                                    droplet.__getattribute__(key):
+                                return
+                        elif self.kwargs[key] != droplet.__getattribute__(key):
                             return
 
                 return droplet
@@ -481,7 +489,15 @@ class DropletModel(abc.ABC):
                     result = True
                 else:
                     for key in self.kwargs:
-                        if self.kwargs[key] == droplet.__getattribute__(key):
+                        if key == "size":
+                            if self.kwargs[key].slug !=\
+                                    droplet.__getattribute__("size_slug"):
+                                break
+                        elif key == "tags":
+                            if self.kwargs[key] not in\
+                                    droplet.__getattribute__(key):
+                                break
+                        elif self.kwargs[key] == droplet.__getattribute__(key):
                             result = True
                         else:
                             break
@@ -512,7 +528,11 @@ class DropletModel(abc.ABC):
 
                 for key in self.kwargs:
                     if key != "id":
-                        if key == "tags":
+                        if key == "size":
+                            if self.kwargs[key].slug !=\
+                                    droplet.__getattribute__("size_slug"):
+                                return
+                        elif key == "tags":
                             if self.kwargs[key] not in\
                                     droplet.__getattribute__(key):
                                 return
@@ -545,7 +565,11 @@ class DropletModel(abc.ABC):
                     result = True
                 else:
                     for key in self.kwargs:
-                        if key == "tags":
+                        if key == "size":
+                            if self.kwargs[key].slug !=\
+                                    droplet.__getattribute__("size_slug"):
+                                break
+                        elif key == "tags":
                             if self.kwargs[key] not in\
                                     droplet.__getattribute__(key):
                                 break
