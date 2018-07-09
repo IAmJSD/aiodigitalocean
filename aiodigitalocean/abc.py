@@ -571,6 +571,10 @@ class DropletModel(abc.ABC):
             raise CannotCreateDroplet(
                 "Region not found in your model."
             )
+        elif "image" not in self.kwargs:
+            raise CannotCreateDroplet(
+                "Image not found in your model."
+            )
 
         to_send = {
             "size": self.kwargs['size'],
