@@ -20,6 +20,7 @@ import dateutil.parser
 from .exceptions import Forbidden, HTTPException, CannotCreateDroplet,\
     CannotCreateLoadBalancer
 import asyncio
+from functools import total_ordering
 # Imports go here.
 
 
@@ -90,6 +91,7 @@ class Kernel(abc.ABC):
 # A kernel object.
 
 
+@total_ordering
 class Image(abc.ABC):
     __slots__ = [
         "id", "name", "distribution", "slug",
@@ -117,6 +119,15 @@ class Image(abc.ABC):
 
         self.min_disk_size = image_json['min_disk_size']
         self.size_gigabytes = image_json['size_gigabytes']
+
+    def __eq__(self, other):
+        return self.slug == other.slug
+
+    def __ne__(self, other):
+        return self.slug != other.slug
+
+    def __lt__(self, other):
+        return self.slug < other.slug
 # A image object.
 
 
@@ -155,18 +166,28 @@ class Networks(abc.ABC):
 # A networks object.
 
 
+@total_ordering
 class Region(abc.ABC):
     __slots__ = [
-        "name", "slug", "sizes",
+        "name", "slug", "size_slugs",
         "features", "available"
     ]
 
     def __init__(self, region_json):
         self.name = region_json.get('name')
         self.slug = region_json.get('slug')
-        self.sizes = region_json.get('sizes')
+        self.size_slugs = region_json.get('sizes')
         self.features = region_json.get('features')
         self.available = region_json.get('available')
+
+    def __eq__(self, other):
+        return self.slug == other.slug
+
+    def __ne__(self, other):
+        return self.slug != other.slug
+
+    def __lt__(self, other):
+        return self.slug < other.slug
 # A region object.
 
 
@@ -601,7 +622,7 @@ class DropletModel(abc.ABC):
             )
 
         to_send = {
-            "size": self.kwargs['size'],
+            "size": self.kwargs['size'].slug,
             "name": self.kwargs['name'],
             "region": self.kwargs['region'].slug,
             "image": self.kwargs['image'].slug
@@ -1153,3 +1174,43 @@ class SSHKey(abc.ABC):
         else:
             return True
 # A class for a SSH key.
+
+
+@total_ordering
+class Size(abc.ABC):
+    __slots__ = [
+        "client", "slug", "memory", "vcpus",
+        "disk", "transfer", "price_monthly",
+        "price_hourly", "region_slugs",
+        "available"
+    ]
+
+    def __init__(self, client, size_json):
+        self.client = client
+        self.slug = size_json['slug']
+        self.memory = size_json['memory']
+        self.vcpus = size_json['vcpus']
+        self.disk = size_json['disk']
+        self.transfer = size_json['transfer']
+        self.price_monthly = size_json[
+            'price_monthly'
+        ]
+        self.price_hourly = size_json[
+            'price_hourly'
+        ]
+        self.region_slugs = size_json['regions']
+        self.available = size_json['available']
+
+    def __eq__(self, other):
+        return self.slug == other.slug
+
+    def __ne__(self, other):
+        return self.slug != other.slug
+
+    def __lt__(self, other):
+        return self.memory < other.memory
+
+    async def get_regions(self):
+        for r in self.region_slugs:
+            yield self.client.get_region(r)
+# A class for a size object.

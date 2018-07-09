@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import aiohttp
 from .abc import DropletModel, LoadBalancerModel,\
-    Region, Image, User, ForwardingRule, SSHKey
+    Region, Image, User, ForwardingRule, SSHKey, Size
 from .exceptions import EnvVariableNotFound, Forbidden,\
     HTTPException
 # Imports go here.
@@ -278,3 +278,40 @@ class Client:
             for r in regions:
                 yield Region(r)
     # Gets all of the regions.
+
+    async def sizes(self):
+        response, _j = await self.v2_request(
+            "GET", "sizes"
+        )
+        sizes = _j['sizes']
+        if response.status == 403:
+            raise Forbidden(
+                "Credentials invalid."
+            )
+        elif response.status != 200:
+            raise HTTPException(
+                f"Returned the status {response.status}."
+            )
+        else:
+            for s in sizes:
+                yield Size(self, s)
+    # Gets a list of VPS sizes.
+
+    async def get_size(self, size_slug):
+        response, _j = await self.v2_request(
+            "GET", "sizes"
+        )
+        sizes = _j['sizes']
+        if response.status == 403:
+            raise Forbidden(
+                "Credentials invalid."
+            )
+        elif response.status != 200:
+            raise HTTPException(
+                f"Returned the status {response.status}."
+            )
+        else:
+            for s in sizes:
+                if s['slug'] == size_slug:
+                    return Size(self, s)
+    # Gets a size by slug.
