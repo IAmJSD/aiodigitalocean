@@ -244,19 +244,37 @@ class Client:
     # Creates a SSH key.
 
     async def images(self):
-        resp, _j = await self.v2_request(
+        response, _j = await self.v2_request(
             "GET", "images?type=distribution"
         )
         images = _j['images']
-        for i in images:
-            yield Image(i)
+        if response.status == 403:
+            raise Forbidden(
+                "Credentials invalid."
+            )
+        elif response.status != 200:
+            raise HTTPException(
+                f"Returned the status {response.status}."
+            )
+        else:
+            for i in images:
+                yield Image(i)
     # Gets all of the images.
 
     async def regions(self):
-        resp, _j = await self.v2_request(
+        response, _j = await self.v2_request(
             "GET", "regions"
         )
         regions = _j['regions']
-        for r in regions:
-            yield Region(r)
+        if response.status == 403:
+            raise Forbidden(
+                "Credentials invalid."
+            )
+        elif response.status != 200:
+            raise HTTPException(
+                f"Returned the status {response.status}."
+            )
+        else:
+            for r in regions:
+                yield Region(r)
     # Gets all of the regions.
